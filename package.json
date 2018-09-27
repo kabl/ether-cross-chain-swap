@@ -1,0 +1,11 @@
+{
+  "name": "ether-atomic-cross-chain-swap",
+  "version": "1.0.0",
+  "description": "Cross chain swap smart contract for Ether swap",
+  "main": "index.js",
+  "scripts": {
+    "test": "truffle test"
+  },
+  "author": "kabl",
+  "license": "MIT"
+}
