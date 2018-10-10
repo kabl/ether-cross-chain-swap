@@ -1,43 +1,33 @@
 # README
 
-This smart contract demonstrates an 'Atomic cross-chain swap between different blockchain networks'. 
-The blockchains needs to support 'secret lock' and 'secret proof' functionalities. It's possible with Ethereum, Bitcoin, NEM, NEO and several other products. 
-This smart contract is based on the NEM cross chain swap functionality. 
-- [Nemtech](https://nemtech.github.io/guides/transaction/atomic-cross-chain-swap-between-NEM-public-and-private-chain.html).
+This Ethereum smart contract demonstrates an 'Atomic cross-chain swap between different blockchain networks' and is based on the NEM cross-chain swap functionality. 
+The blockchains needs to support *Hashed TimeLock Contract* or [HTLC](https://en.bitcoin.it/wiki/Hashed_Timelock_Contracts) for a trustless environment for swaps. In NEM Blockchain these are described as 'secret lock' and 'secret proof' functionalities. It's possible with Ethereum, Bitcoin, NEM, NEO and several other protocols.
+
+- [NEM Developer Center Concepts](https://nemtech.github.io/concepts/cross-chain-transaction.html)
+- [NEM Developer Center Guides](https://nemtech.github.io/guides/transaction/atomic-cross-chain-swap-between-NEM-public-and-private-chain.html)
 - [Bitcoin Atomic cross-chain trading](https://en.bitcoin.it/wiki/Atomic_cross-chain_trading)
 
-However if it's real 'Atomic' is valid point to discuss. But both parties have a strong incentive to fullfill the rules
+However, whether it is real 'Atomic' is a valid point to discuss. Nevertheless both parties have a strong incentive to fullfill the rules.
 
 ## How it works
 
-Lets say Alice wants to convert Ether to NEM:XEM and Bob NEM:XEM to Ether. 
+Lets say Alice wants to convert ETH to NEM:XEM and Bob NEM:XEM to Ether. 
 
-Hint: The wording in this Ethereum smart contract is a bit different as in the NEM documentation. In my opinion NEM naming is confusing. Especial in NEM `secret` represents a `hash` and is not the real secret. 
+<img src="./resources/images/cross-chain-swap.png" width="500" height="350">
 
-Steps:
-- Both agree on an exchange rate.
-- Both exchange their addresses to receive the funds.
-- Alice creates a `secret` and the `hash` of it. 
-- Alice writes to the Ethereum smart contract `secretLock(uint256 _lockTimeSec, bytes32 _hash, address _recipient)` and adds the agreed amount of Ether. 
-- Alice submits the `hash` to Bob. 
-- Bob is now able to validate/audit the 'secret lock' in the Ethereum smart contract. 
-- Bob will now create a 'secret lock transaction' in NEM `SecretLockTransaction.create(Deadline.create(),
-    new Mosaic(new MosaicId('nem:xem'), exchangeValue),
-    lockTime,
-    HashType.SHA256,
-    secret,
-    Alice.address,
-    NetworkType.MIJIN);`.
-- Alice gets notified and can validate/audit the NEM secret lock. 
-- Alice will then call on the NEM network a 'secret proof transaction'. `SecretProofTransaction.create(
-    Deadline.create(),
-    HashType.SHA256,
-    hash,
-    proof,
-    NetworkType.MAIN_NET);`.
-- So Alice will get the XEM:NEM and for her the swap was successful. 
-- Bob gets notified by the NEMs secret proof transaction. As it is a public blockchain, Bob sees the `proof` the real secret. 
-- Bob then creates an Ethereum transaction to the smart contract. `secretProof(bytes32 _hash, bytes _proof)`. So Bob will receive the Ether. 
+The steps required are illustrated in the diagram below. ![](./resources/images/cross-chain-swap-sequence-diagram.png)
+
+
+
+|    |     Transaction | Network | Sender | 
+|----------:|:---------------:|:-----:|:--:| 
+| TX1 |  **secretLock**(uint256 _lockTimeSec, bytes32 _hash, address _recipient) |  Ethereum Rinkeby Testnet | Alice | 
+| TX2 |    **SecretLockTransaction**.create(Deadline.create(), new Mosaic(new MosaicId('nem:xem'), exchangeValue), lockTime, HashType.SHA3_512, secret, aliceNEM.address, NetworkType.MIJIN_TEST) |  NEM Catapult Private Chain | Bob | 
+| TX3 | **SecretProofTransaction**.create( Deadline.create(), HashType.SHA3_512, secret, proof, NetworkType.MIJIN_TEST) | NEM Catapult Private Chain | Alice | 
+| TX4 | **secretProof**(bytes32 _hash, bytes _proof) |  Ethereum Rinkeby Testnet | Bob | 
+
+Hint: Note that the wording in this Ethereum smart contract is a bit different as in the NEM documentation. For some, the NEM naming can be confusing, because `secret` represents a `hash` of a `proof`. However, consider that the hashing algorithm also needs to be revealed for the swap to work and that's why it could be confused with the *hash* term.
+
 
 
 ## Notes
